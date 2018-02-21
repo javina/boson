@@ -2,17 +2,31 @@
     "name": "intralix/fuel",
     "description": "Consumir Ws de Combustible",
     "type": "library",
-    "require": {
-        "guzzlehttp/guzzle": "^6.3"
-    },
-    "require-dev": {
-        "guzzlehttp/guzzle": "^6.3"
-    },
     "license": "MIT",
     "authors": [
         {
             "name": "Jorge Aviña",
             "email": "javina@intralix.com"
         }
-    ]
+    ],
+    "require": {
+        "php": ">=5.5.9",
+        "guzzlehttp/guzzle": "^6.3"
+    },
+    "require-dev": {
+        "guzzlehttp/guzzle": "^6.3"
+    },
+
+    "autoload": {
+    "psr-4": {
+      "Intralix\\Fuel\\": "src/"
+    },
+    "extra": {
+      "laravel": {
+          "providers": [
+              "Intralix\\Fuel\\FuelServiceProvider"
+          ]
+      }
+    },
+  },
 }
