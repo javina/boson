@@ -1,7 +1,9 @@
 <?php
 namespace Intralix\Fuel;
 
+use Illuminate\Support\Facades\Log;
 use GuzzleHttp\Client;
+use Carbon\Carbon;
 
 /**
  * Class to call Bosson Fuel Ws
@@ -22,13 +24,13 @@ class Fuel
      * @return void
      * @author Intralix
      **/    
-    public function __construct( $config)
+    public function __construct( $config )
     {
         $this->config = $config;
         $this->client = new Client([            
-            'base_uri' => $this->config['base_uri'],
+            //'base_uri' => $this->config['base_uri'],
         ]);
-    }
+    }   
 
     /**
      * Attemps to call Fuel Ws
@@ -37,15 +39,13 @@ class Fuel
      * @param string $startTime Start Date
      * @param string $endTime End Date
      * @param string $deviceID Device Identifier
-     * @param string $clientID Client Identifier
-     * @param string $dealerID Dealer Identifier
-     * @param string $selectionType Selection Type default odometer
-     * @param string $selectionMode Selection mode default dates     
+     * @param string $clientID Client Identifier     
      * @author Intralix
      **/
-    public function getFuelPerformance( $startTime, $endTime, $deviceID, $clientID, $dealerID, $selectionType = 'odometer', $selectionMode ='dates')
+    public function getFuelPerformance( $startTime, $endTime, $deviceID, $clientID )
     {
         // Vars 
+        $results = [];
         $cargas = 0;
         $descargas = 0;
         $ralenti = 0;
@@ -54,36 +54,34 @@ class Fuel
         $odometro_inicial = 0;
         $odometro_final = 0;
         $kilometros_recorridos = 0;
-        $results = [];
-
-        // Attempt Ws Call
-        $response = $this->client->request('POST',$this->config['base_uri'],  [
-            'json' => [
-                'startTime' => $startTime,
-                'endTime' => $endTime,
-                'deviceID' => $deviceID,
-                'clientID' => $clientID,
-                'dealerID' => $dealerID,
-                'selectionType' => $selectionType,
-                'selectionMode' => $selectionMode
-            ]        
-        ]);
+        $velocidadades = [];
+        $top_speed = 0;
+        $top_speed_date = '';
+        $average_speed = 0;
+        $max_fuel = 0;
+        $max_fuel_date = '';
+        $min_fuel = 0;
+        $min_fuel_date = '';
+        $counter = 0;
         
+       
         // Get Response
-        $data =  json_decode($response->getBody());        
+        $data =  $this->getWsFuelData($startTime, $endTime, $deviceID, $clientID);     
         $total_positions = count($data);
         
-        if($total_positions > 0 ) {
-            // Setting Data
+        if($total_positions > 0 ) 
+        {
             $odometro_inicial = $data[1]->Odometer;
-            $nivel_inicial    = $data[1]->globalVolume;
-            $odometro_final   = $data[$total_positions-2]->Odometer;
-            $nivel_final      = $data[$total_positions-2]->globalVolume;          
+            $nivel_inicial = $data[1]->globalVolume;
+
+            $odometro_final = $data[$total_positions-2]->Odometer;
+            $nivel_final = $data[$total_positions-2]->globalVolume;          
+
             $kilometros_recorridos  = $odometro_final - $odometro_inicial;
             
-            // Sumar Cargas / Descargas
             for ($i=1; $i < $total_positions; $i++) 
             { 
+                //echo $data[$i]->eventName . ' <br>';            
                 if($data[$i]->eventName == 'Evento/Cambio brusco en nivel')
                 {
                     if($data[$i]->volumeChange > 0 )
@@ -98,29 +96,147 @@ class Fuel
                 else if ( strpos($data[$i]->eventName,'Combustible consumido en vac')!==false)
                 {
                     $ralenti += $data[$i]->volumeChange;
-                }                
-            }
-            // Calculate Total Level Consumed
-            $volumen_total = ($nivel_inicial - $nivel_final ) + ($cargas - abs($descargas));
-            // Calculate performance
-            $desempno = round($kilometros_recorridos /  $volumen_total, 2);
-            $cada_cien = 100 / $desempno;           
+                }    
 
-            // Results
-            $results['nivel_inicial'] = $nivel_inicial;
-            $results['nivel_final'] = $nivel_final;
-            $results['nivel_cargado'] = $cargas;
-            $results['nivel_descargado'] = $descargas;
-            $results['odometro_inicial'] = $odometro_inicial;
-            $results['odometro_final'] = $odometro_final;
-            $results['kilometros_recorridos'] = $kilometros_recorridos;
-            $results['volumen_total'] = $volumen_total;
-            $results['rendimiento'] = $desempno;
-            $results['rendimiento_cien'] = $cada_cien;
-            $results['consumido_ralenti'] = $ralenti;
+                // Acumulado de Velocidades
+                if($data[$i]->Speed != 'ND')
+                {
+                    if($data[$i]->Speed > 0)
+                        $counter ++;
+
+                    if($i == 1)
+                    {
+                        $top_speed = $data[$i]->Speed;                                                
+                        $top_speed_date = $data[$i]->dateGPS;
+                    }
+                    else if($data[$i]->Speed > $top_speed)
+                    {
+                        $top_speed = $data[$i]->Speed;
+                        $top_speed_date = $data[$i]->dateGPS;  
+                    }
+                }
+
+                // Volumen Máximo
+                if($data[$i]->globalVolume != 'ND')
+                {
+                    if($i == 1)
+                    {
+                        $max_fuel = $data[$i]->globalVolume;                                                
+                        $max_fuel_date = $data[$i]->dateGPS;
+                    }
+                    else if($data[$i]->globalVolume > $max_fuel)
+                    {
+                        $max_fuel = $data[$i]->globalVolume;
+                        $max_fuel_date = $data[$i]->dateGPS;  
+                    }
+                }
+
+
+                // Volumen Mínimo
+                if($data[$i]->globalVolume != 'ND')
+                {
+                    if($i == 1)
+                    {
+                        $min_fuel = $data[$i]->globalVolume;                                                
+                        $min_fuel_date = $data[$i]->dateGPS;
+                    }
+                    else if($data[$i]->globalVolume < $min_fuel)
+                    {
+                        $min_fuel = $data[$i]->globalVolume;
+                        $min_fuel_date = $data[$i]->dateGPS;  
+                    }
+                }
+
+                /* Promedio de la velocidad**/
+                $average_speed += $data[$i]->Speed;
+            }
+
+            /* Volumen **/
+            $volumen_total = ($nivel_inicial - $nivel_final ) + ($cargas - $descargas);
+            if($volumen_total > 0)
+                $desempeno = round($kilometros_recorridos /  $volumen_total, 2);
+            else
+                $desempeno = 0;
+
+            if($desempeno > 0)
+                $cada_cien = 100 / $desempeno;
+            else
+                $cada_cien = 0;
+
+            if($counter > 0)
+                $velocidad_promedio = round($average_speed / $counter, 2 );
+            else
+                $velocidad_promedio = 0;                
+
+            $results = [                 
+                'fecha_inicial' => $startTime,
+                'fecha_final' => $endTime,
+                'odometro_inicial' => ($odometro_inicial),
+                'odometro_final' => ($odometro_final),
+                'distancia_recorrida' => ($kilometros_recorridos),
+                'velocidad_promedio' => $velocidad_promedio,
+                'velocidad_max' => $top_speed,
+                'velocidad_max_fecha' => Carbon::createFromFormat('Y-m-d H:i:s', str_replace('T','',$top_speed_date))->toDateTimeString(),
+                'combustible_inicial' => ($nivel_inicial),
+                'combustible_final' => ($nivel_final),
+                'volumen_minimo' => $min_fuel,
+                'volumen_minimo_fecha' => Carbon::createFromFormat('Y-m-d H:i:s', str_replace('T','',$min_fuel_date))->toDateTimeString(),
+                'volumen_max' => $max_fuel,
+                'volumen_max_fecha' => Carbon::createFromFormat('Y-m-d H:i:s', str_replace('T','',$max_fuel_date))->toDateTimeString(),
+                'volumen_recargado' => ($cargas),
+                'volumen_descargado' => ($descargas),
+                'combustible_consumido' => ($volumen_total),
+                'consumido_en_vacio' => $ralenti,
+                'consumo_cien_km' => ($cada_cien),
+                'rendimiento_litro' => ($desempeno),
+                //'periodo' => 'Mensual',
+            ];            
         }        
 
         return $results;
     }
 
+
+    /**
+     * undocumented function
+     *
+     * @param string $startTime Start Date
+     * @param string $endTime End Date
+     * @param string $deviceID Device Identifier
+     * @param string $clientID Client Identifier
+     * @param string $dealerID Dealer Identifier
+     * @param string $selectionType Selection Type default odometer
+     * @param string $selectionMode Selection mode default dates     
+     * @return mixed array $response
+     * @author Intralix
+     **/
+    public function getWsFuelData( $startTime, $endTime, $deviceID, $clientID, $selectionType = 'odometer', $selectionMode ='dates')
+    {        
+        // Get Data   
+        $response = [];
+        try {
+
+            $response = $this->client->request('POST', $this->config['base_uri'],  [
+                'json' => [
+                    'startTime' => $startTime,
+                    'endTime' => $endTime,
+                    'deviceID' => $deviceID,
+                    'clientID' => $clientID,
+                    'dealerID' => $this->config['dealer_id'],
+                    'selectionType' => $selectionType,
+                    'selectionMode' => $selectionMode
+                ]        
+            ]);
+                        
+            return json_decode($response->getBody());                        
+                
+        } catch (Exception $e) 
+        {                                
+            $response = [];
+            Log::error($e->getMessage());
+        }        
+        
+        return $response;                        
+    }   
+        
 } // END class Fuel

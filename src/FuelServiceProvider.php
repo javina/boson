@@ -5,6 +5,7 @@ namespace Intralix\Fuel;
 use Illuminate\Support\ServiceProvider;
 use Intralix\Fuel\Fuel;
 
+
 class FuelServiceProvider extends ServiceProvider
 {
 /**
