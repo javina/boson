@@ -67,15 +67,17 @@ class Fuel
        
         // Get Response
         $data =  $this->getWsFuelData($startTime, $endTime, $deviceID, $clientID);     
-        $total_positions = count($data);
+        $total_positions = count($data);           
         
         if($total_positions > 0 ) 
         {
             $odometro_inicial = $data[1]->Odometer;
             $nivel_inicial = $data[1]->globalVolume;
+            $fecha_inicial = $data[1]->dateGPS;
 
             $odometro_final = $data[$total_positions-2]->Odometer;
             $nivel_final = $data[$total_positions-2]->globalVolume;          
+            $fecha_final = $data[$total_positions-1]->dateGPS;
 
             $kilometros_recorridos  = $odometro_final - $odometro_inicial;
             
@@ -148,11 +150,16 @@ class Fuel
                 }
 
                 /* Promedio de la velocidad**/
-                $average_speed += $data[$i]->Speed;
-            }
+                
+                if($data[$i]->Speed == 'ND')
+                    $average_speed += 0;
+                else
+                    $average_speed += $data[$i]->Speed;
 
+            }
+            
             /* Volumen **/
-            $volumen_total = ($nivel_inicial - $nivel_final ) + ($cargas - $descargas);
+            $volumen_total = ($nivel_inicial - $nivel_final ) + ($cargas - abs($descargas));
             if($volumen_total > 0)
                 $desempeno = round($kilometros_recorridos /  $volumen_total, 2);
             else
@@ -169,8 +176,8 @@ class Fuel
                 $velocidad_promedio = 0;                
 
             $results = [                 
-                'fecha_inicial' => $startTime,
-                'fecha_final' => $endTime,
+                'fecha_inicial' => Carbon::createFromFormat('Y-m-d H:i:s', str_replace('T','',$fecha_inicial))->toDateTimeString(),
+                'fecha_final' => Carbon::createFromFormat('Y-m-d H:i:s', str_replace('T','',$fecha_final))->toDateTimeString(),
                 'odometro_inicial' => ($odometro_inicial),
                 'odometro_final' => ($odometro_final),
                 'distancia_recorrida' => ($kilometros_recorridos),

@@ -8,7 +8,7 @@ use Intralix\Fuel\Fuel;
 
 class FuelServiceProvider extends ServiceProvider
 {
-/**
+    /**
      * Indicates if loading of the provider is deferred.
      *
      * @var bool
@@ -35,6 +35,7 @@ class FuelServiceProvider extends ServiceProvider
     {
          // Load config File
         $this->mergeConfigFrom(__DIR__ . '/../config/fuel.php', 'fuel');
+        
         // Bind 
         $this->app->singleton('fuel', function ($app) {
             return new Fuel(config('fuel'));
