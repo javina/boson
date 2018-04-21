@@ -235,7 +235,9 @@ class Fuel
                 ]        
             ]);
                         
-            return json_decode($response->getBody());                        
+            Log::info($response->getStatusCode() . ' :: From Receiver Fuel WS Server.');                        
+            $response = json_decode($response->getBody());
+            $response = ($response !== null) ? $response : [];
                 
         } catch (Exception $e) 
         {                                
