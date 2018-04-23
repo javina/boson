@@ -1,6 +1,6 @@
 {
     "name": "intralix/fuel",
-    "description": "Consumir Ws de Combustible",
+    "description": "Consumir Servicios de Boson",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -21,17 +21,17 @@
     {
         "psr-4": 
         {
-            "Intralix\\Fuel\\": "src/"
+            "Intralix\\Boson\\": "src/"
         }
     },
     
     "extra": {
         "laravel": {
             "providers": [
-                "Intralix\\Fuel\\FuelServiceProvider"
+                "Intralix\\Boson\\BosonServiceProvider"
             ],
             "aliases": {
-               "Fuel": "Intralix\\Fuel\\Facades\\Fuel"
+               "Boson": "Intralix\\Boson\\Facades\\Boson"
             }
         }
     }   

@@ -1,17 +1,17 @@
 <?php
-namespace Intralix\Fuel;
+namespace Intralix\Boson;
 
 use Illuminate\Support\Facades\Log;
 use GuzzleHttp\Client;
 use Carbon\Carbon;
 
 /**
- * Class to call Bosson Fuel Ws
+ * Class to call Bosson Boson Ws
  *
- * @package Intralix\Fuel
+ * @package Intralix\Boson
  * @author  Intralix
  **/
-class Fuel
+class Boson
 {
     /* Http Client **/
     protected $client;
@@ -33,7 +33,7 @@ class Fuel
     }   
 
     /**
-     * Attemps to call Fuel Ws
+     * Attemps to call Boson Ws
      *
      * @return array $results 
      * @param string $startTime Start Date

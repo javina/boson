@@ -1,9 +1,9 @@
 <?php
 
-namespace Intralix\Fuel;
+namespace Intralix\Boson;
 
 use Illuminate\Support\ServiceProvider;
-use Intralix\Fuel\Fuel;
+use Intralix\Boson\Boson;
 
 
 class FuelServiceProvider extends ServiceProvider
@@ -34,11 +34,11 @@ class FuelServiceProvider extends ServiceProvider
     public function register()
     {
          // Load config File
-        $this->mergeConfigFrom(__DIR__ . '/../config/fuel.php', 'fuel');
+        $this->mergeConfigFrom(__DIR__ . '/../config/boson.php', 'boson');
         
         // Bind 
-        $this->app->singleton('fuel', function ($app) {
-            return new Fuel(config('fuel'));
+        $this->app->singleton('boson', function ($app) {
+            return new Boson(config('boson'));
         });  
     }
 
@@ -49,7 +49,7 @@ class FuelServiceProvider extends ServiceProvider
      */
     public function provides()
     {
-        return ['Fuel'];
+        return ['Boson'];
     }     
 
     /**
@@ -60,8 +60,8 @@ class FuelServiceProvider extends ServiceProvider
      **/    
     private function handleConfigs() {
 
-        $configPath = __DIR__ . '/../config/fuel.php';
-        $this->publishes([ $configPath => config_path('fuel.php') ]);                
+        $configPath = __DIR__ . '/../config/boson.php';
+        $this->publishes([ $configPath => config_path('boson.php') ]);                
     }        
 
 }

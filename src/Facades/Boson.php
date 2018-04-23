@@ -1,5 +1,5 @@
 <?php
-namespace Intralix\Fuel\Facades;
+namespace Intralix\Boson\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Facade;
  * @package default
  * @author 
  **/
-class Fuel extends Facade
+class Boson extends Facade
 {
 
     /**
