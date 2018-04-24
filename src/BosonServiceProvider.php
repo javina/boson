@@ -6,7 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Intralix\Boson\Boson;
 
 
-class FuelServiceProvider extends ServiceProvider
+class BosonServiceProvider extends ServiceProvider
 {
     /**
      * Indicates if loading of the provider is deferred.

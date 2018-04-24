@@ -4,6 +4,7 @@ namespace Intralix\Boson;
 use Illuminate\Support\Facades\Log;
 use GuzzleHttp\Client;
 use Carbon\Carbon;
+use Intralix\Boson\FuelPerformance;
 
 /**
  * Class to call Bosson Boson Ws
@@ -45,6 +46,7 @@ class Boson
     public function getFuelPerformance( $startTime, $endTime, $deviceID, $clientID )
     {
         // Vars 
+        /*
         $results = [];
         $cargas = 0;
         $descargas = 0;
@@ -63,6 +65,7 @@ class Boson
         $min_fuel = 0;
         $min_fuel_date = '';
         $counter = 0;
+        */
         
        
         // Get Response
@@ -71,6 +74,9 @@ class Boson
         
         if($total_positions > 0 ) 
         {
+            $fuel_performance = new FuelPerformance($data);
+            $results = $fuel_performance->getResults();
+            /*
             $odometro_inicial = $data[1]->Odometer;
             $nivel_inicial = $data[1]->globalVolume;
             $fecha_inicial = $data[1]->dateGPS;
@@ -82,8 +88,7 @@ class Boson
             $kilometros_recorridos  = $odometro_final - $odometro_inicial;
             
             for ($i=1; $i < $total_positions; $i++) 
-            { 
-                //echo $data[$i]->eventName . ' <br>';            
+            {                         
                 if($data[$i]->eventName == 'Evento/Cambio brusco en nivel')
                 {
                     if($data[$i]->volumeChange > 0 )
@@ -149,7 +154,7 @@ class Boson
                     }
                 }
 
-                /* Promedio de la velocidad**/
+                // Promedio de la velocidad
                 
                 if($data[$i]->Speed == 'ND')
                     $average_speed += 0;
@@ -158,7 +163,7 @@ class Boson
 
             }
             
-            /* Volumen **/
+            // Volumen 
             $volumen_total = ($nivel_inicial - $nivel_final ) + ($cargas - abs($descargas));
             if($volumen_total > 0)
                 $desempeno = round($kilometros_recorridos /  $volumen_total, 2);
@@ -197,7 +202,8 @@ class Boson
                 'consumo_cien_km' => ($cada_cien),
                 'rendimiento_litro' => ($desempeno),
                 //'periodo' => 'Mensual',
-            ];            
+            ];    
+            */        
         }        
 
         return $results;
