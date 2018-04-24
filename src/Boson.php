@@ -1,9 +1,8 @@
 <?php
 namespace Intralix\Boson;
 
-use Illuminate\Support\Facades\Log;
 use GuzzleHttp\Client;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Intralix\Boson\FuelPerformance;
 
 /**
