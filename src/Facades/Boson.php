@@ -20,7 +20,7 @@ class Boson extends Facade
      **/
     protected static function getFacadeAccessor()
     {
-        return 'fuel';
+        return 'boson';
     }
    
 } // END class Gurtam

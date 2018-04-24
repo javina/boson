@@ -4,7 +4,7 @@ namespace Intralix\Boson;
 use Carbon\Carbon;
 
 /**
- * Class to call Bosson Boson Ws
+ * Class Get Fuel Performance Data
  *
  * @package Intralix\Boson
  * @author  Intralix
@@ -13,6 +13,7 @@ class FuelPerformance
 {
 
     protected $cargas;    
+    protected $total_positions;
     protected $descargas;
     protected $ralenti;
     protected $nivel_inicial;
@@ -34,6 +35,7 @@ class FuelPerformance
     /**
      * Class Constructor
      *
+     * @param array $data Fuel Positions From Webservice
      * @return void
      * @author Intralix
      **/    
@@ -62,7 +64,6 @@ class FuelPerformance
         $this->scanData();
     }  
 
-
     /**
      * undocumented function
      *
@@ -72,15 +73,15 @@ class FuelPerformance
     public function scanData()
     {         
         // Get Response        
-        $total_positions = count($this->data);           
+        $this->total_positions = count($this->data);           
         
-        if($total_positions > 0 ) 
+        if($this->total_positions > 0 ) 
         {
             // Obtenemos los valores Iniciales y Finales
             $this->setMinAndMaxValues();
             
             // Recorremos la información o posiciones
-            for ($i=1; $i < $total_positions; $i++) 
+            for ($i=1; $i < $this->total_positions; $i++) 
             {                
 
                 if($this->data[$i]->eventName == 'Evento/Cambio brusco en nivel')
@@ -96,32 +97,24 @@ class FuelPerformance
 
                 // Acumulado de Velocidades
                 $this->acumularVelocidades( $this->data[$i] );               
-
                 // Volumen Máximo
                 $this->acumularVolumenGlobalMax( $this->data[$i] );
-            
                 // Volumen Mínimo
                 $this->acumularVolumenGlobalMin( $this->data[$i] );
-
                 /* Promedio de la velocidad**/       
                 $this->velocidadPromedio( $this->data[$i] );                      
             }
             
             /* Volumen **/
             $this->volumen_total = $this->volumenTotal();
-            
             // Desempeño
             $this->desempeno = $this->calcularDesempeno();
-            
             // Calcular cada 100
             $this->cada_cien = $this->calcularCadaCien();
-
             // Valocidad Promedio
             $this->velocidad_promedio = $this->valocidadPromedio();
-                       
         }                
     }
-
 
     /**
      * undocumented function
@@ -137,9 +130,9 @@ class FuelPerformance
         $this->fecha_inicial = $this->data[1]->dateGPS;
 
         // Valores finales
-        $this->odometro_final = $this->data[$total_positions-2]->Odometer;
-        $this->nivel_final = $this->data[$total_positions-2]->globalVolume;          
-        $this->fecha_final = $this->data[$total_positions-1]->dateGPS;
+        $this->odometro_final = $this->data[$this->total_positions-2]->Odometer;
+        $this->nivel_final = $this->data[$this->total_positions-2]->globalVolume;          
+        $this->fecha_final = $this->data[$this->total_positions-1]->dateGPS;
         
         // Kilometraje Recorrido        
         $this->kilometros_recorridos  = $this->odometro_final - $this->odometro_inicial;
@@ -147,13 +140,13 @@ class FuelPerformance
         // Temporal
         $this->top_speed = $this->data[1]->Speed;                                                
         $this->top_speed_date = $this->data[1]->dateGPS;
-        $this->max_fuel = ($this->data[1]->globalVolume != 'ND') ?? 0;  
+        $this->max_fuel = ($this->data[1]->globalVolume != 'ND') ? $this->data[1]->globalVolume : 0;  
         $this->max_fuel_date = $this->data[1]->dateGPS;
         // Mas Fuel
-        $this->max_fuel = ($this->data[1]->globalVolume != 'ND') ?? 0;  
+        $this->max_fuel = ($this->data[1]->globalVolume != 'ND') ? $this->data[1]->globalVolume : 0;  
         $this->max_fuel_date = $this->data[1]->dateGPS;
         // Min Fuel
-        $this->min_fuel = ($this->data[1]->globalVolume != 'ND') ?? 0;                                                  
+        $this->min_fuel = ($this->data[1]->globalVolume != 'ND') ? $this->data[1]->globalVolume : 0;                                                  
         $this->min_fuel_date = $this->data[1]->dateGPS;
     }
 
